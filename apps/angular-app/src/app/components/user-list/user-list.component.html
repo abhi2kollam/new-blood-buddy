@@ -1,0 +1,68 @@
+<!-- <input type="text" class="search" [(ngModel)]="searchText" placeholder="Search"> -->
+<div class="d-flex w-100 justify-content-between flex-wrap flex-md-nowrap align-items-center py-3">
+  <div class="btn-group w-100" role="group" aria-label="Basic checkbox toggle button group">
+    <input type="checkbox" [checked]="selectedItems.includes(roles.Guest)" class="btn-check" id="btncheck1"
+      (change)="onStatusFilter(roles.Guest,$event)" autocomplete="off">
+    <label class="btn btn-outline-primary font-sm-1 d-flex align-items-center justify-content-center" for="btncheck1">
+      <span class="tick fas fa-check me-1"></span> Guest</label>
+
+    <input type="checkbox" [checked]="selectedItems.includes(roles.Admin)" class="btn-check"
+      (change)="onStatusFilter(roles.Admin,$event)" id="btncheck2" autocomplete="off">
+    <label class="btn btn-outline-primary font-sm-1 d-flex align-items-center justify-content-center" for="btncheck2">
+      <span class="tick fas fa-check me-1"></span> Admin</label>
+
+    <input type="checkbox" [checked]="selectedItems.includes(roles.SuperAdmin)" class="btn-check"
+      (change)="onStatusFilter(roles.SuperAdmin,$event)" id="btncheck3" autocomplete="off">
+    <label class="btn btn-outline-primary font-sm-1 d-flex align-items-center justify-content-center" for="btncheck3">
+      <span class="tick fas fa-check me-1"></span>Super Admin</label>
+  </div>
+</div>
+
+<div class="pricing-header mx-auto">
+  <div class="no-data text-center" *ngIf="preLoader">
+    <p class="nodata-msg">
+      <em class="fas fa-spinner fa-spin"></em>
+      Loading...
+    </p>
+  </div>
+
+  <div class="no-data text-center" *ngIf="noData">
+    <p class="nodata-msg">No users yet!</p>
+  </div>
+  <div class="table-custom border border-secondary-subtle" *ngIf="hideWhenNoUser">
+    <div class="table-row" *ngFor="
+            let user of users
+              | segmentedFilter: selectedItems:'role'
+              | paginate: { itemsPerPage: 10, currentPage: p };
+            let i = index
+          ">
+      <div class="p-0 position-relative">
+        <div class="color-bar" [class]="user.role">
+          <span class="color-text font-sm">{{user.role}}</span>
+        </div>
+        <div class=" p-2 d-flex justify-content-between align-items-center" style="margin-left: 20px;">
+          <div class="row align-items-end flex-grow-1 text-break">
+            <span class="d-flex">
+              <img class="d-inline p-0 align-self-start user-image mx-1 img-thumbnail rounded-circle"
+                src="{{(user.photoURL) ? user.photoURL : '/assets/dummy-user.svg'}}" alt="{{user.displayName}}">
+              <div class="d-flex flex-column flex-grow-1">
+                {{ user.displayName ?? 'No Name Provided' }}
+                <span class="col-md-6 font-sm" style="font-size: .7rem;">{{user.email}}</span>
+                <span *ngIf="user.role === roles.Admin">
+                  <span class="font-sm" *ngIf="user.assignedDistricts">[{{user.assignedDistricts}}]</span>
+                  <span class="font-sm" *ngIf="!user.assignedDistricts">No districts assigned</span>
+                </span>
+              </div>
+            </span>
+          </div>
+          <span class="ms-2 btn btn-outline-primary btn-sm" title="Edit"
+            routerLink="/home/{{currentUser?.uid}}/users/{{ user.id }}">
+            <em class="fas fa-pencil-alt"></em>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <pagination-controls (pageChange)="p = $any($event)"></pagination-controls>
+</div>

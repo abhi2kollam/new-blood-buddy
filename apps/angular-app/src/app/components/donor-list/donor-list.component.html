@@ -1,0 +1,133 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-3">
+  <input type="text" class="search flex-grow-1 me-2" [(ngModel)]="searchText"
+    placeholder="Search by name, group & location">
+  <span [ngClass]="{'btn-primary':advanced}" class="btn btn-outline-primary btn-sm ms-1" (click)="showAdvanced($event)">
+    <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
+      <path
+        d="M0 416c0 17.7 14.3 32 32 32l54.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 448c17.7 0 32-14.3 32-32s-14.3-32-32-32l-246.7 0c-12.3-28.3-40.5-48-73.3-48s-61 19.7-73.3 48L32 384c-17.7 0-32 14.3-32 32zm128 0a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM320 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32-80c-32.8 0-61 19.7-73.3 48L32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l246.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48l54.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-54.7 0c-12.3-28.3-40.5-48-73.3-48zM192 128a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm73.3-64C253 35.7 224.8 16 192 16s-61 19.7-73.3 48L32 64C14.3 64 0 78.3 0 96s14.3 32 32 32l86.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 128c17.7 0 32-14.3 32-32s-14.3-32-32-32L265.3 64z" />
+    </svg>
+  </span>
+  <span>
+    <a class="btn btn-outline-primary btn-sm ms-1" routerLink="/home/{{currentUser.uid}}/list/add">
+      <em class="fa-solid fa-plus"></em>
+    </a>
+  </span>
+</div>
+<div class="container-fluid px-0" *ngIf="advanced">
+  <div class="row gx-2">
+    <div class="col-md-3 col-6 mb-2 ">
+      <select name="district" class="form-control" [(ngModel)]="filter.district" [ngModelOptions]="{standalone:true}">
+        <option disabled selected hidden value="">District</option>
+        <option *ngFor="let dist of districts" [value]="dist.name">{{dist.name}}</option>
+      </select>
+    </div>
+    <div class="col-md-3 col-6 mb-2 ">
+      <input class="form-control" type="text" [(ngModel)]="filter.location" placeholder="Location">
+    </div>
+    <div class="col-md-3 col-6 mb-2 ">
+      <select class="form-control" [(ngModel)]="filter.group" name="group">
+        <option disabled selected hidden value="">Group</option>
+        <option value="A+">A+</option>
+        <option value="A-">A-</option>
+        <option value="B+">B+</option>
+        <option value="B-">B-</option>
+        <option value="AB+">AB+</option>
+        <option value="AB-">AB-</option>
+        <option value="O+">O+</option>
+        <option value="O-">O-</option>
+      </select>
+    </div>
+    <div class="col-md-3 col-6 mb-2 d-flex justify-content-between align-items-baseline">
+      <select class="form-control d-inline-block me-1" [(ngModel)]="filter.availableStatus" name="group">
+        <option disabled selected hidden value="">Availability Status</option>
+        <option value="available" style="color:green">Available</option>
+        <option value="soon" style="color:orange">Soon</option>
+        <option value="unavailable" style="color:red">Not Available</option>
+      </select>
+      <span class="btn btn-outline-primary btn-sm" (click)="applyFilter()" title="search"><em
+          class="fas fa-search"></em></span>
+      <span class="btn btn-outline-danger btn-sm ms-1" (click)="clearFilter()" title="Reset"><em
+          class="fas fa-times"></em></span>
+    </div>
+  </div>
+  <div>
+  </div>
+</div>
+
+<div class="pricing-header mx-auto">
+  <div class="no-data text-center" *ngIf="preLoader">
+    <p class="nodata-msg">
+      <em class="fas fa-spinner fa-spin"></em>
+      Loading...
+    </p>
+  </div>
+
+  <div class="no-data text-center" *ngIf="noData">
+    <p class="nodata-msg">No donor added yet!</p>
+    <a routerLink="/home/{{currentUser?.uid}}/add" class="btn btn-success"> Add Donor </a>
+  </div>
+
+  <div class="table-custom border border-secondary-subtle" *ngIf="hideWhenNoDonor">
+    <div class="table-row" *ngFor="
+            let donor of donors
+              | filter: searchText: complexFilter
+              | paginate: { itemsPerPage: 6, currentPage: p };
+            let i = index
+          ">
+      <div class="p-0 position-relative">
+        <div class="color-bar" [class]="donor.availableStatus">
+          <span class="color-text font-sm">{{donor.availableStatus}}</span>
+        </div>
+        <div class="p-2 ps-0 d-flex justify-content-between align-items-center" style="cursor: pointer;margin-left:20px"
+          (click)="donor.opened = !donor.opened ">
+          <div class="row align-items-end flex-grow-1 mx-0">
+            <span class="col-md-6 px-0">
+              <i class="fas fa-caret-right m-0" *ngIf="!donor.opened"></i>
+              <i class="fas fa-caret-down m-0" *ngIf="donor.opened"></i>
+              {{ donor.name }}
+            </span>
+            <span class="col-md-6 font-sm">{{donor.district}} {{donor.location}}</span>
+            <span *ngIf="donor.lastDonated" class="col-md-6 font-sm">last donated
+              {{donor.lastDonated | timeAgo}} ({{donor.lastDonated| date}})</span>
+            <span *ngIf="!donor.lastDonated" class="col-md-6 font-sm">last donated
+              info not available
+            </span>
+          </div>
+          <span class="border-1 border px-2 rounded border-info">{{ donor.group }}</span>
+        </div>
+        <div *ngIf="donor.opened" class="bg-info-subtle">
+          <div *ngIf="isAdmin || donor.isSameCreator" class="action-block d-flex justify-content-evenly py-2">
+            <span class=" me-2 btn btn-outline-success btn-sm" title="Call">
+              <a href="tel:{{donor.mobileNumber}}"><em class="fas fa-phone"></em></a>
+            </span>
+            <span class=" me-2 btn btn-outline-primary btn-sm" (click)="copyContact(donor)" title="Copy Contact">
+              <em class="far fa-copy"></em>
+            </span>
+            <span class="me-2 btn btn-outline-primary btn-sm" title="Edit"
+              routerLink="/home/{{currentUser?.uid}}/list/{{ donor.id }}"><em class="fas fa-pencil-alt"></em></span>
+            <span class="me-2 btn btn-outline-danger btn-sm" title="Delete" (click)="deleteDonor(donor)"><em
+                class="fas fa-trash-alt"></em></span>
+          </div>
+          <div *ngIf="!isAdmin && !donor.isSameCreator"
+            class="text-center action-block d-flex justify-content-evenly py-2">
+            <span *ngIf="donor.status === 'approved'" class=" me-2 btn btn-outline-success btn-sm" title="Call">
+              <a href="tel:{{donor.mobileNumber}}"><em class="fas fa-phone"></em></a>
+            </span>
+            <a *ngIf="!donor.status" href="#" (click)="requestContact($event,donor)">Request for contact</a>
+            <span *ngIf="donor.status ==='pending'">Requested</span>
+            <span *ngIf="donor.status === 'on-hold'">Request put on
+              hold
+              <div class="font-sm">{{donor.remarks}}</div>
+            </span>
+            <span *ngIf="donor.status === 'rejected'">Request
+              rejected
+              <div class="font-sm">{{donor.remarks}}</div>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <pagination-controls (pageChange)="p = $any($event)"></pagination-controls>
+</div>

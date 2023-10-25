@@ -1,0 +1,128 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-3">
+  <div class="btn-group w-100" role="group" aria-label="Basic checkbox toggle button group">
+    <input type="checkbox" [checked]="selectedItems.includes('pending')" class="btn-check" id="btncheck1"
+      (change)="onStatusFilter('pending',$event)" autocomplete="off">
+    <label class="btn btn-outline-primary font-sm-1 d-flex align-items-center justify-content-center" for="btncheck1">
+      <span class="tick fas fa-check me-1"></span> Pending</label>
+
+    <input type="checkbox" [checked]="selectedItems.includes('on-hold')" class="btn-check"
+      (change)="onStatusFilter('on-hold',$event)" id="btncheck2" autocomplete="off">
+    <label class="btn btn-outline-primary font-sm-1 d-flex align-items-center justify-content-center" for="btncheck2">
+      <span class="tick fas fa-check me-1"></span> On-Hold</label>
+
+    <input type="checkbox" [checked]="selectedItems.includes('approved')" class="btn-check"
+      (change)="onStatusFilter('approved',$event)" id="btncheck3" autocomplete="off">
+    <label class="btn btn-outline-primary font-sm-1 d-flex align-items-center justify-content-center" for="btncheck3">
+      <span class="tick fas fa-check me-1"></span>Approved</label>
+
+    <input type="checkbox" [checked]="selectedItems.includes('rejected')" class="btn-check" id="btncheck4"
+      (change)="onStatusFilter('rejected',$event)" autocomplete="off">
+    <label class="btn btn-outline-primary font-sm-1 d-flex align-items-center justify-content-center" for="btncheck4">
+      <span class="tick fas fa-check me-1"></span> Rejected</label>
+  </div>
+</div>
+
+
+<div class="pricing-header mx-auto">
+  <div class="no-data text-center" *ngIf="preLoader">
+    <p class="nodata-msg">
+      <em class="fas fa-spinner fa-spin"></em>
+      Loading...
+    </p>
+  </div>
+
+  <div class="no-data text-center" *ngIf="noData">
+    <p class="nodata-msg">No requests yet!</p>
+  </div>
+  <div class=" table-custom border border-secondary-subtle" *ngIf="hideWhenNoRequests">
+    <div class="table-row" *ngFor="
+            let request of requests
+              | segmentedFilter: selectedItems:'status'
+              | paginate: { itemsPerPage: 5, currentPage: p };
+            let i = index
+          ">
+      <div class="p-0 position-relative">
+        <div class="color-bar" [class]="request.status">
+          <span class="color-text font-sm">{{request.status}}</span>
+        </div>
+        <div (click)="request.opened = !request.opened " class=" p-2 d-flex justify-content-between align-items-center"
+          style="cursor: pointer;margin-left: 20px;">
+          <div class="row align-items-end flex-grow-1">
+            <span class="text-break  d-flex align-items-center">
+              <span>
+                <em class="fas fa-caret-right m-0" *ngIf="!request.opened"></em>
+                <em class="fas fa-caret-down m-0" *ngIf="request.opened"></em>
+              </span>
+              <img *ngIf="!isGuestUser"
+                class="d-inline p-0 align-self-start user-image mx-1 img-thumbnail rounded-circle"
+                src="{{(request.requesterPhoto) ? request.requesterPhoto : '/assets/dummy-user.svg'}}"
+                alt="{{request.requesterName}}">
+              <div>
+                <strong class="fs-6">{{ request.requesterName }}</strong>
+                <div class="font-sm">{{isGuestUser? 'have':'has'}} requested contact info of <strong
+                    class="fs-6">{{request.donorName}}</strong>
+                  (Dist:{{request.donorDistrict}})</div>
+              </div>
+            </span>
+          </div>
+          <span class="d-flex align-items-center">
+            <span class="border-1 border px-2 rounded border-info me-2">{{request.group}}</span>
+          </span>
+        </div>
+        <div *ngIf="request.opened" class="bg-info-subtle">
+          <div *ngIf="!isGuestUser" class="action-block d-flex justify-content-evenly py-2" style="margin-left: 20px;">
+            <span class="btn btn-outline-success btn-sm me-2">
+              <a style="text-decoration: none;" href="tel:{{request.donorMobile}}"><em class="fas fa-phone "></em> Donor
+              </a>
+            </span>
+            <span *ngIf="request.requesterMobile" class="btn btn-outline-success btn-sm me-2">
+              <a style="text-decoration: none;" href="tel:{{request.requesterMobile}}"><em class="fas fa-phone "></em>
+                Requester
+              </a>
+            </span>
+            <span *ngIf="!isGuestUser" class=" me-2 btn btn-outline-primary btn-sm" (click)="openDialog(request)"
+              title="Action">
+              <em class="fas fa-tasks"></em>
+            </span>
+            <span class=" me-2 btn btn-outline-danger btn-sm" (click)="deleteRequest(request)" title="Delete">
+              <em class="fas fa-trash-alt"></em>
+            </span>
+          </div>
+          <div *ngIf="isGuestUser" class="text-center py-2">
+            <span *ngIf="request.status === 'approved'" class=" me-2 btn btn-outline-success btn-sm" title="Call">
+              <a href="tel:{{request.mobileNumber}}"><em class="fas fa-phone"></em></a>
+            </span>
+            <div *ngIf="request.remarks" class="font-sm">{{request.remarks}}</div>
+            <div *ngIf="!request.remarks" class="font-sm">No remarks</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <pagination-controls (pageChange)="p = $any($event)"></pagination-controls>
+
+  <dialog #myDialog>
+    <form>
+      <div class="form-group">
+        <label for="status">Status</label>
+        <select id="status" class="form-control" [(ngModel)]="request.status" [ngModelOptions]="{standalone:true}">
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+          <option value="pending">Pending</option>
+          <option value="on-hold">On-Hold</option>
+        </select>
+      </div>
+      <div class="form-group mb-2">
+        <label for="remarks">Remarks</label>
+        <textarea id="remarks" class="form-control" [(ngModel)]="request.remarks" [ngModelOptions]="{standalone: true}"
+          placeholder="Remarks/Reason"></textarea>
+      </div>
+      <div class="mt-3 d-flex justify-content-evenly">
+        <button type="submit" class="btn btn-primary me-2" (click)="saveStatus()">Submit</button>
+        <button class="btn btn-secondary" (click)="closeDialog()">Close</button>
+      </div>
+    </form>
+
+  </dialog>
+</div>

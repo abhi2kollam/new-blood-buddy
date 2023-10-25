@@ -1,0 +1,122 @@
+<nav class="navbar navbar-dark bg-primary flex-md-nowrap p-0 shadow" style="height: 70px;">
+  <a class="navbar-brand col-sm-3 col-md-2 mr-0" routerLink="/home/{{currentUser?.uid}}/list">
+    <img class="ms-2" style="height: 35px;" src="./assets/blood-bear.svg" />
+    <span class="dasboard-text">Rakth Buddy</span>
+  </a>
+  <ul class="navbar-nav px-3">
+    <div class="dropdown" *ngIf="authService.userData as user">
+      <button class="btn" type="button" id="dropdownMenuButton1" data-mdb-toggle="dropdown" aria-expanded="false">
+        <a class="nav-link p-0 border-0 position-relative" (click)="openUserMenu($event)" href="#">
+          <img class=" p-0 align-self-start user-image mr-5 img-thumbnail rounded-circle"
+            src="{{(user.photoURL) ? user.photoURL : '/assets/dummy-user.svg'}}" alt="{{user.displayName}}">
+          <svg *ngIf="currentUser?.role?.includes(roles.Admin)" class="shield" xmlns="http://www.w3.org/2000/svg"
+            height="1em" viewBox="0 0 512 512">
+            <path
+              d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8V444.8C394 378 431.1 230.1 432 141.4L256 66.8l0 0z" />
+          </svg>
+        </a>
+      </button>
+      <ul class="dropdown-menu" id="dropdown-menu" [ngClass]="{'show':showMenu}" aria-labelledby="dropdownMenuButton1">
+        <li><a class="dropdown-item user-details">
+            <img class=" p-0  user-image mr-5 img-thumbnail rounded-circle"
+              src="{{(user.photoURL) ? user.photoURL : '/assets/dummy-user.svg'}}" alt="{{user.displayName}}" />
+            <strong class="text-center">{{(user.displayName) ? user.displayName : 'User'}}</strong>
+            <p class="text-center text-black-50 mb-0 font-sm">{{user.email}}</p>
+            <p class="text-center text-black-50 mb-0 text-capitalize font-sm">({{currentUser?.role ??'Guest'}})</p>
+          </a>
+        </li>
+        <li *ngIf="showInstallAppOption" (click)="installApp($event)"><a class="dropdown-item" href="#"> <i
+              class="fas fa-download"></i>Install App</a>
+        <li (click)="openDialog()"><a class="dropdown-item" href="#"> <i class="fas fa-user-cog"></i>Update Profile</a>
+        <li (click)="checkForUpdates($event)"><a class="dropdown-item" href="#"> <i class="fas fa-retweet"></i>Check for
+            updates</a>
+        <li (click)="logout($event)"><a class="dropdown-item" href="#"> <i class="fas fa-door-open pe-2"></i>Logout</a>
+        </li>
+      </ul>
+    </div>
+  </ul>
+</nav>
+
+<!-- Sidebar navigation -->
+<div class="container-fluid">
+  <div class="row">
+    <nav class="col-md-2 d-md-block sidebar">
+      <div class="sidebar-sticky">
+        <ul class="nav flex-column">
+          <!-- <li class="nav-item">
+            <a class="nav-link" routerLink="/home/{{currentUser.uid}}/add" routerLinkActive="active">
+              <em class="fas fa-user-plus d-md-inline me-md-2" style="display: block;font-size: 1rem;"></em>
+              <span class="font-sm-1">Add Donor</span>
+            </a>
+          </li> -->
+
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/home/{{currentUser.uid}}/list" routerLinkActive="active">
+              <em class="fas fa-users d-md-inline me-md-2" style="display: block;font-size: 1rem;"></em>
+              <span class="font-sm-1">Donors</span>
+            </a>
+          </li>
+          <li class="nav-item" *ngIf="isSuperAdmin">
+            <a class="nav-link" routerLink="/home/{{currentUser.uid}}/users" routerLinkActive="active">
+              <em class="fas fa-users-cog d-md-inline me-md-2" style="display: block;font-size: 1rem;"></em>
+              <span class="font-sm-1">Users</span>
+            </a>
+          </li>
+          <li class="nav-item" *ngIf="isSuperAdmin">
+            <a class="nav-link" routerLink="/home/{{currentUser.uid}}/locations" routerLinkActive="active">
+              <em class="fas fa-map-marked-alt d-md-inline me-md-2" style="display: block;font-size: 1rem;"></em>
+              <span class="font-sm-1">Locations</span>
+            </a>
+          </li>
+          <li class="nav-item" >
+            <a class="nav-link" routerLink="/home/{{currentUser.uid}}/requests" routerLinkActive="active">
+              <em class="fas fa-clipboard-check d-md-inline me-md-2" style="display: block;font-size: 1rem;"></em>
+              <span *ngIf="isAdmin" class="font-sm-1">Requests</span>
+              <span *ngIf="!isAdmin" class="font-sm-1">My Requests</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main content -->
+    <main role="main" class="col-md-9 ml-sm-auto col-lg-10">
+      <div class="inner-adjust">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+  <dialog #myDialog>
+    <h4>
+      Update Profile
+    </h4>
+    <form #editForm="ngForm">
+      <div class="form-group mb-2">
+        <p class="error" *ngIf="firstTimeVisit">
+          Mobile Number is mandatory for this app to work properly
+        </p>
+        <label>Mobile number <span class="font-sm"> (with out country code)</span></label>
+        <input type="tel" name="mobileNumber" [ngModelOptions]="{standalone:true}" [(ngModel)]="mobileNumber"
+          pattern="[0-9]{10}" class="form-control" required maxlength="10" #mobile="ngModel" />
+
+        <p *ngIf="mobile?.touched && mobile?.errors?.['required']" class="error">
+          <sup>*</sup>Please provide contact number
+        </p>
+        <p *ngIf="mobile?.errors?.['pattern']" class="error">
+          <sup>*</sup>Mobile Number is invalid
+        </p>
+      </div>
+      <div class="form-group mb-2" *ngIf="showProfileUpload">
+        <label>Profile Pic</label>
+
+        <input type="file" id="file" #userPhoto (change)="onFileSelected($event)" name="image" autocomplete="off" />
+      </div>
+      <div class="mt-3 d-flex justify-content-evenly">
+        <button type="submit" class="btn btn-primary me-2" [disabled]="mobile.invalid || fileUploading"
+          (click)="saveStatus()">Save</button>
+        <button *ngIf="!firstTimeVisit" class="btn btn-secondary" (click)="closeDialog()">Close</button>
+      </div>
+    </form>
+
+  </dialog>
+</div>
